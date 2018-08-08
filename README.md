@@ -5,7 +5,7 @@ Created by Jackz#7627
 # Features
   * Automatic backup
   * Automatic restoring on deletion
-  * Cloning a server
+  * Clone servers
   * Copy all roles, channels, pins, messages, files
 
 # Setup
