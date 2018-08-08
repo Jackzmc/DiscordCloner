@@ -1,15 +1,18 @@
 const fs = require('fs-extra');
-
+const {config} = require('../modules/db');
+if(!config.get('autorestore.enabled').value()) return;
 console.info(`[autorestore] Module initalized.`);
-let watched, prevGuild;
+
+const watchedDB = config.get('watched').value();
+const watched = watchedDB.guild, prevGuild = watchedDB.dontuse_existing;
+/*let watched, prevGuild;
 fs.readFile('./db/guild.watch','utf-8').then(guildwatch => {
     const split = guildwatch.split(',');
     watched = split[0], prevGuild = split[1];
-})
+})*/
 module.exports = async(client,guild) => {
     if(guild.id !== watched) return;
-    if(!client.config.autorestore || !client.config.autorestore.enabled) return;
-    if(prevGuild !== "false") {
+    if(prevGuild) {
         //send to old guild
         const g = await client.guilds.get(prevGuild);
         if(!g) return console.warn('[autorestore] Attempted to use existing restored server but could not find. Halted');
@@ -20,8 +23,7 @@ module.exports = async(client,guild) => {
             if(!user) console.warn(`[autorestore] Notify ID ${v} is invalid`)
             user.send(`Automatically detected guild deletion. Restored guild: <${invite.code}>. `)
         })
-        await fs.writeFile('./db/guild.watch',`${watched},${g.id}`);
-        return;
+        return config.set('watched',{guildID:watched,dontuse_existing:g.id}).write()
     }
     console.log('[autorestore] Guild lost, waiting 5 minutes incase.');
     setTimeout(async() => {
@@ -40,7 +42,7 @@ module.exports = async(client,guild) => {
                 user.send(`Automatically detected guild deletion. Auto-restoring guild: <${invite.url}>. `)
             })
             await require('../commands/restore.js').restoreGuild(newGuild,rf);
-            await fs.writeFile('./db/guild.watch',`${newGuild.id},false`);
+            config.set('watched',{guildID:newGuild.id}).write()
         }else {
             console.info('[autorestore] Cancelled: Guild now available')
         }

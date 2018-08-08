@@ -7,7 +7,7 @@ module.exports = async(client) => {
     }catch(err) {
         throw new Error('[autosave] Missing config.json file, stopping...');
     }     
-    if(!config.autosave || config.autosave.interval <= 0) return;
+    if(!config.autosave || config.autosave.interval <= 0 || !config.autosave.enabled) return;
     console.info(`[autosave] Module initalized. Autosaving every ${config.autosave.interval} hours`);
     const guild = await client.guilds.get(config.autosave.guild)
     
