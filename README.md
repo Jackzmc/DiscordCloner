@@ -1,5 +1,6 @@
 # DiscordCloner
-Clone, backup, and restore discord guilds easily
+Clone, backup, and restore discord guilds easily.
+
 Created by Jackz#7627
 
 # Features
