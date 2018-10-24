@@ -1,7 +1,7 @@
 {
   "name": "DiscordCloner",
   "version": "1.0.0",
-  "description": "",
+  "description": "Clone, backup, and restore discord guilds easily.",
   "main": "core.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
