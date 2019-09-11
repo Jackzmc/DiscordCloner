@@ -1,6 +1,6 @@
 {
-  "name": "DiscordCloner",
-  "version": "1.0.0",
+  "name": "discordcloner",
+  "version": "1.1.0",
   "description": "Clone, backup, and restore discord guilds easily.",
   "main": "core.js",
   "scripts": {
@@ -11,6 +11,7 @@
   "dependencies": {
     "common-tags": "^1.7.2",
     "discord.js": "^11.3.2",
+    "dotenv": "^8.1.0",
     "file-size": "^1.0.0",
     "fs-extra": "^6.0.1",
     "got": "^8.3.2",

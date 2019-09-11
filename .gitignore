@@ -29,6 +29,7 @@ typings/
 db/
 backups/
 !db/config.sample.json
+!sample.env
 nodemon.json
 guild.watch
 custom_xmls/

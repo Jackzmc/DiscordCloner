@@ -1,3 +1,4 @@
+require('dotenv').config();
 const Discord = require("discord.js");
 const fs = require('fs');
 const client = new Discord.Client({
@@ -6,13 +7,16 @@ const client = new Discord.Client({
 	messageCacheLifetime:86400,
 	messageSweepInterval:600,
 	messageCacheMaxSize:100
-});  
+});
 
-if(!fs.existsSync('./db/config.json')) {
-	throw new Error('./db/config.json is missing! Exiting...');
-}else{
-	client.config = require('./db/config.json');
-	if(!client.config.discord_token) throw 'Discord token is missing. Exiting';
+// if(!fs.existsSync('./')) {
+// 	throw new Error('./db/config.json is missing! Exiting...');
+// }else{
+// 	client.config = require('./db/config.json');
+// 	if(!client.config.discord_token) throw 'Discord token is missing. Exiting';
+// }
+if(!process.env.DISCORD_TOKEN) {
+    throw new Error('Environmental Variable "DISCORD_TOKEN" is missing. Exiting.');
 }
 fs.readFile('./db/guild.watch','utf-8',(err,data) => {
 	if(!err) client.guild = data.split(",")[0]
@@ -21,14 +25,14 @@ fs.readFile('./db/guild.watch','utf-8',(err,data) => {
 client.commands = new Discord.Collection();
 client.aliases = new Discord.Collection();
 
-fs.readdir('./events/', (err, files) => {
+fs.readdir('./src/events/', (err, files) => {
 	if (err) console.error(err);
 	console.log(`[core/loader] Loading ${files.length} events.`);
 	files.forEach(file => {
 	  if(file.split(".").slice(-1)[0] !== "js") return; //has to be .js file *cough* folder that doesnt exist *cough*
 	  const eventName = file.split(".")[0];
 	  	try {
-		  const event = require(`./events/${file}`);
+		  const event = require(`./src/events/${file}`);
 		  if(!event || typeof event !== 'function') {
 			  return console.warn(`[core/loader] \x1b[33mWarning: ${file} is not setup correctly!\x1b[0m`);
 		  }
@@ -39,11 +43,11 @@ fs.readdir('./events/', (err, files) => {
 	  	}
 	});
 });
-fs.readdir('./commands/', (err, files) => {
+fs.readdir('./src/commands/', (err, files) => {
 	if (err) console.error(err);
 	console.log(`[core/loader] Loading ${files.length} commands.`);
 	files.forEach(f => {
-		fs.stat(`./commands/${f}`, (err, stat) => {
+		fs.stat(`./src/commands/${f}`, (err, stat) => {
 			if(f.split(".").slice(-1)[0] !== "js") return;
 			if(f.startsWith("_")) return;
 			try {
@@ -63,4 +67,4 @@ fs.readdir('./commands/', (err, files) => {
 });
 /* end of loading */
 
-client.login(client.config.discord_token);
+client.login(process.env.DISCORD_TOKEN);

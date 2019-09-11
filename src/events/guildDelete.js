@@ -1,5 +1,5 @@
 const fs = require('fs-extra');
-const {config} = require('../modules/db');
+const {config} = require('./modules/db');
 if(!config.get('autorestore.enabled').value()) return;
 console.info(`[autorestore] Module initalized.`);
 
@@ -32,10 +32,10 @@ module.exports = async(client,guild) => {
             const rf = JSON.parse(await fs.readFile('./db/guild.json'))
             const newGuild = await client.user.createGuild(rf.guild.name||'Untitled Guild',rf.guild.region);
             await newGuild.channels.forEach(v => v.delete());
-            
+
             const channel = await newGuild.createChannel('default','text');
             const invite = await channel.createInvite({maxAge:0});
-        
+
             client.config.autorestore.notify_ids.forEach(v => {
                 let user = client.users.get(v);
                 if(!user) console.warn(`[autorestore] Notify ID ${v} is invalid`)
