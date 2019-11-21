@@ -1,31 +1,30 @@
 
     
-const fs = require('fs-extra')
+const fs = require('fs').promises
 const {Attachment} = require('discord.js');
 const filesize = require('file-size');
 const jzip = require('jszip')
 const config = require('../db/config.json');
 
-exports.manageBackups = async() => {
+exports.manageBackups = async() => { //automatically move latest.json to backup-<timestamp>
     const files = await fs.readdir('./backups/');
     const current_latest = files.indexOf('latest.json');
-    if(current_latest !== -1) {
+    if(current_latest !== -1) { //if latest.json exists
         console.log('Archiving backup');
         const info = require(__dirname + `/../backups/latest.json`);
-        await fs.rename(`./backups/latest.json`,`./backups/backup-${info.created}.json`);
+        await fs.rename(`./backups/latest.json`,`./backups/archives/${info.created}.json`);
     }
     //older
-    if(files > config.maxbackups++) { //add one for latest.json
-        let dates = files.map(v => {
-            if(v === 'latest') return;
-            return v.split('-')[1].replace('.json','');
-        })
-        dates.sort((a, b) => a - b); //sort by number 
-        console.log(`[backup] deleting backup-${dates[0]}.json`);
+    const archiveFiles = await fs.readdir('./backups/archives');
+    if(archiveFiles > config.maxbackups++) { //add one for latest.json
+        const dates = archiveFiles.map(v => { //map the files (timestamp.json -> timestamp), then sort by that timestamp
+            return v.replace('.json','');
+        }).sort((a, b) => a - b);
+        console.log(`[backup] deleting backup-${dates[0]}.json`); //TODO: debug statements
         await fs.unlink(__dirname + `/../backups/backup-${dates[0]}.json`)
     } 
 }
-exports.getLatestBackup = async() => { //gets latest (non latest.json) backup
+exports.getLatestBackup = async() => { //gets latest backup (latest.json -> then latest by timestamp)
     return new Promise(async(resolve,reject) => {
         const files = await fs.readdir('./backups/');
         let dates = files.map(v => {
@@ -38,29 +37,38 @@ exports.getLatestBackup = async() => { //gets latest (non latest.json) backup
 
 exports.run = async(client,msg,args) => {
     if(!msg.member.hasPermission('ADMINISTRATOR')) {
-        if(msg.author.id !== '117024299788926978') return msg.channel.send('🚫 You do not have permission to manage backups.');
+        if(msg.author.id !== client.config.ownerID) return msg.channel.send('🚫 You do not have permission `ADMINISTRATOR` needed to manage backups.');
     }
     
     if(args[0]) {
         if(args[0].toLowerCase() === 'start') {
             //perm check
-            if(!msg.guild.me.hasPermission('BAN_MEMBERS')) return msg.channel.send('❌ Need ban permissions to view ban list.')
+            //if(!msg.guild.me.hasPermission('BAN_MEMBERS')) return msg.channel.send('❌ I do not have `BAN_MEMBERS` permission to view bans') //TODO: check if needed?
             this.startBackup(client,msg.guild,msg.channel,msg.author.tag)
             .then((output) => {
-                msg.channel.send(`✅ **Backup complete: Saved ${output.xmls} new XMLs**`,new Attachment(Buffer.from(output.json),`backup-${Date.now()}.json`))
+                //TODO: output backup in full zip: guild.json, <file_channel_backup.zip> 
+                //TODO: also print amount of: Files (as 'file' command does), messages/pins, etc
+                msg.channel.send(`✅ **Backup completed successfully.`,new Attachment(Buffer.from(output.json),`backup-${Date.now()}.json`))
             }).catch(err => {
                 msg.channel.send(`❌ **Error occurred during backup: ** \`${err.message}\``);
                 console.error(err.stack);
             });
-        }else if(args[0].toLowerCase() === 'xml' || args[0].toLowerCase() === "xmls") {
-            saveXMLs(client,msg.guild)
+        }else if(args[0].toLowerCase() === 'file' || args[0].toLowerCase() === "files") {
+            saveFiles(client,msg.guild)
             .then(amount => {
-                return msg.channel.send(`✅ Backed up a total of **${amount}** new XMLs`)
+                /* TODO: print the backups
+                    Backed up files successfully:
+                    #channel1 - 5 new files
+                    #downloads - 3 new files
+
+                    then provide .zip
+                */
+                return msg.channel.send(`✅ Backed up files:\n`)
             }).catch(err => {
                 return msg.channel.send(`❌ **An error occurred while backing up XMLs:** ${err.message}`)
             })
         }else if(args[0].toLowerCase() === 'list') {
-            if(args[1] === "xml" || args[1] === "xmls") {
+            if(args[1] === "files" || args[1] === "file") {
                 try {
                     const zip = new jzip();
                     const files = await fs.readdir('./custom_xmls');
@@ -206,8 +214,19 @@ function getGuildMisc(client,guild) {
         }
     })
 }
+function saveFiles(client,guild) {
+    const promises = [];
+    client.config.backup.save_files_channels.forEach(v => {
+        promises.push(new Promise(async(resolve,reject) => {
+            if(typeof v === 'string') return saveFile(client,v).catch(err => reject(err)).then(() => resolve());
+           
+        }))
+    })
+    Promise.all(promises).then(() => resolve())
+    .catch(err => reject(err))
+}
 
-function saveXMLs(client,guild) {
+function saveFile(client,filename) {
     return new Promise(async(resolve,reject) => {
         try {
             const channel = client.channels.find(v => v.name === client.config.backup.xml_channel_name);

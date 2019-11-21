@@ -1,5 +1,5 @@
 const got = require('got')
-const fs = require('fs-extra');
+const fs = require('fs').promises;
 const humanize = require('humanize');
 const {Attachment} = require('discord.js');
 exports.run = async(client,msg,args) => {

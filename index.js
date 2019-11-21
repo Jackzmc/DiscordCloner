@@ -8,7 +8,8 @@ const client = new Discord.Client({
 	messageCacheMaxSize:100
 });  
 
-if(!fs.existsSync('./db/config.json')) {
+client.config2 = require('./modules/db.js');
+if(!fs.existsSync('./db/config.json')) { //TODO: move all to lowdash config2, so it doesnt error on none
 	throw new Error('./db/config.json is missing! Exiting...');
 }else{
 	client.config = require('./db/config.json');
@@ -17,6 +18,7 @@ if(!fs.existsSync('./db/config.json')) {
 fs.readFile('./db/guild.watch','utf-8',(err,data) => {
 	if(!err) client.guild = data.split(",")[0]
 })
+require('./modules/updatecheck.js');
 
 client.commands = new Discord.Collection();
 client.aliases = new Discord.Collection();
@@ -35,7 +37,7 @@ fs.readdir('./events/', (err, files) => {
 		  client.on(eventName, event.bind(null, client));
 		  delete require.cache[require.resolve(`./events/${file}`)];
 	  	}catch(err) {
-		  console.error(`[core/loader] \x1b[31mEvent ${file} had an error:\n    ${err.message}\x1b[0m`);
+		  console.error(`[core/loader] \x1b[31mEvent ${file} had an error:\n    ${err.stack}\x1b[0m`);
 	  	}
 	});
 });
@@ -56,7 +58,7 @@ fs.readdir('./commands/', (err, files) => {
 				});
 				client.commands.set(props.help.name, props);
 			}catch(err) {
-				console.error(`[core/loader] \x1b[31mCommand ${f} had an error:\n    ${err.message}\x1b[0m`);
+				console.error(`[core/loader] \x1b[31mCommand ${f} had an error:\n    ${err.stack}\x1b[0m`);
 			}
 		});
 	});

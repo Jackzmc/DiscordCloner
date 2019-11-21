@@ -1,4 +1,4 @@
-const fs = require('fs-extra')
+const fs = require('fs').promises
 module.exports = async (client, msg) => {
 	if(msg.author.bot) return;
 	const args = msg.content.split(/ +/g);

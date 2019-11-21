@@ -27,8 +27,11 @@ typings/
 *.example
 .eslintrc.json
 db/
+backup
 backups/
 !db/config.sample.json
 nodemon.json
 guild.watch
-custom_xmls/
+files/
+tmp
+_* #ignore anything prefixed with _

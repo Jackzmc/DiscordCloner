@@ -1,5 +1,5 @@
-const fs = require('fs-extra');
-const {config} = require('../modules/db');
+const fs = require('fs').promises;
+const config = require('../modules/db.js');
 if(!config.get('autorestore.enabled').value()) return;
 console.info(`[autorestore] Module initalized.`);
 

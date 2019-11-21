@@ -1,8 +1,10 @@
 const low = require('lowdb');
-const fs = require('fs-extra')
+const fs = require('fs').promises
 const FileSync = require('lowdb/adapters/FileSync');
-module.exports = low(new FileSync('db/config.json'));
+const db = low(new FileSync('db/config.json'));
 
 const configDefault = fs.readJSONSync('./db/config.sample.json','utf-8');
 
-this.defaults(configDefault).write()
+db.defaults(configDefault).write()
+
+module.exports = db;
